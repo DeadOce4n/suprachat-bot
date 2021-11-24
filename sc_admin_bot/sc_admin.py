@@ -77,7 +77,7 @@ def setup(bot):
     for row in cursor:
         if row.channel_name not in bot.memory["badnicks"].keys():
             bot.memory["badnicks"][row.channel_name] = []
-        bot.memory["badnicks"][row.channel_name].append(row.badnick)
+        bot.memory["badnicks"][row.channel_name].append(row.badnick.lower())
 
     cursor.execute(
         "SELECT rule.rule_number, rule.rule_desc, channel.channel_name FROM"
@@ -398,7 +398,7 @@ def badnicks(bot, trigger):
     def add(badnick):
         if not bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
             bot.say(f"Error: la moderación de nicks no está activada para esta sala.")
-        elif badnick in bot.memory["badnicks"][trigger.sender.lower()]:
+        elif badnick.lower() in bot.memory["badnicks"][trigger.sender.lower()]:
             bot.say(
                 f"Error: el nick {badnick} ya está en la lista de {trigger.sender}."
             )
@@ -409,7 +409,7 @@ def badnicks(bot, trigger):
                 cursor.execute(
                     "INSERT INTO badnick VALUES(?, (SELECT channel_id FROM"
                     " channel WHERE (LOWER(channel_name) = ?)))",
-                    (badnick, trigger.sender.lower()),
+                    (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.IntegrityError as err:
                 bot.say(
@@ -419,7 +419,7 @@ def badnicks(bot, trigger):
             else:
                 conn.commit()
                 conn.close()
-                bot.memory["badnicks"][trigger.sender.lower()].append(badnick)
+                bot.memory["badnicks"][trigger.sender.lower()].append(badnick.lower())
                 bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
                 users = {k: v for k, v in bot.channels[trigger.sender].users.items()}
                 for nick in users.keys():
@@ -432,7 +432,7 @@ def badnicks(bot, trigger):
     def delete(badnick):
         if not bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
             bot.say(f"Error: la moderación de nicks no está activada para esta sala.")
-        if badnick not in bot.memory["badnicks"][trigger.sender.lower()]:
+        if badnick.lower() not in bot.memory["badnicks"][trigger.sender.lower()]:
             bot.say(
                 f"Error: el nick {badnick} no se encuentra en la lista de {trigger.sender}."
             )
@@ -444,7 +444,7 @@ def badnicks(bot, trigger):
                     "DELETE FROM badnick WHERE(badnick.badnick = ? AND badnick"
                     ".channel_id = (SELECT channel_id FROM channel WHERE"
                     " channel_name = ?));",
-                    (badnick, trigger.sender.lower()),
+                    (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.Error as err:
                 bot.say(
@@ -454,7 +454,7 @@ def badnicks(bot, trigger):
             else:
                 conn.commit()
                 conn.close()
-                bot.memory["badnicks"][trigger.sender.lower()].remove(badnick)
+                bot.memory["badnicks"][trigger.sender.lower()].remove(badnick.lower())
                 bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
 
     if trigger.group(3) == "mostrar":
@@ -485,14 +485,12 @@ def badnicks(bot, trigger):
 @plugin.unblockable
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def match_badnick(bot, trigger):
+    def filter_nicks(nick: str) -> bool:
+        return nick.lower() == trigger.sender.lower()
+
     for channel in bot.memory["badnicks"]:
         if bot.memory["channels"][channel]["badnicks"]:
-            badnick = tuple(
-                filter(
-                    lambda nick: nick == trigger.sender,
-                    bot.memory["badnicks"][channel],
-                )
-            )
+            badnick = tuple(filter(filter_nicks, bot.memory["badnicks"][channel]))
             if len(badnick) > 0:
                 bot.write(("KICK", channel, badnick[0]), "tu nick es inapropiado!")
 
@@ -506,7 +504,7 @@ def user_join(bot, trigger):
     if (
         trigger.nick != bot.nick
         and bot.memory["channels"][trigger.sender.lower()]["badnicks"]
-        and trigger.nick in bot.memory["badnicks"][trigger.sender.lower()]
+        and trigger.nick.lower() in bot.memory["badnicks"][trigger.sender.lower()]
     ):
         bot.write(
             ("KICK", trigger.sender.lower(), trigger.nick), "tu nick es inapropiado!"
