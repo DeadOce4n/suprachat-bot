@@ -7,7 +7,6 @@ authors = ["Pedro Ivan Partida Galarza <ivan.97galarz@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 sopel = "^7.1.6"
-PyPika = "^0.48.8"
 mariadb = "^1.0.8"
 
 [tool.poetry.dev-dependencies]
