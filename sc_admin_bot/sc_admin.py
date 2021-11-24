@@ -636,48 +636,73 @@ def rules(bot, trigger):
                 bot.memory["rules"][trigger.sender.lower()].pop(rule_num)
                 bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
 
-    if trigger.group(3) == "mostrar" or trigger.group(3) is None:
+    if trigger.group(3) == "mostrar" or (
+        (trigger.group(1) == "rg" or trigger.group(1) == "reglas")
+        and trigger.group(3) is None
+    ):
         show()
+
     elif trigger.group(3) == "activar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
             bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
         else:
             toggle()
+
     elif trigger.group(3) == "desactivar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
             bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
         else:
             toggle(activate=False)
+
     elif trigger.group(1) == "reglas modificar" or trigger.group(1) == "rg modificar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
             bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+        elif trigger.group(2) is None:
+            bot.say("Error: no se especificó número de regla.")
+            bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
         else:
-            get_rule = re.search(r"(?P<num>^\b\d+\b)\s(?P<desc>.*)$", trigger.group(2))
-            if trigger.group(3) is None:
+            get_rule = re.search(r"(\b\d\b)\b(.*)\b", trigger.group(2))
+            if get_rule is None:
                 bot.say("Error: no se especificó regla.")
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
-            elif get_rule is None:
+            elif get_rule.group(1) is None:
+                bot.say("Error: no se especificó número de regla.")
+                bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
+            elif not get_rule.group(2):
                 bot.say("Error: no se especificó descripción de regla.")
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             else:
-                update(int(get_rule.group("num")), get_rule.group("desc"))
+                update(int(get_rule.group(1)), get_rule.group(2).strip())
+
     elif trigger.group(1) == "reglas agregar" or trigger.group(1) == "rg agregar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
             bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+        elif trigger.group(2) is None:
+            bot.say("Error: no se especificó número de regla.")
+            bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
         else:
-            get_rule = re.search(r"(?P<num>^\b\d+\b)\s(?P<desc>.*)$", trigger.group(2))
-            if trigger.group(3) is None:
+            get_rule = re.search(r"(\b\d\b)\b(.*)\b", trigger.group(2))
+            if get_rule is None:
                 bot.say("Error: no se especificó regla.")
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
-            elif get_rule is None:
+            elif get_rule.group(1) is None:
+                bot.say("Error: no se especificó número de regla.")
+                bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
+            elif not get_rule.group(2):
                 bot.say("Error: no se especificó descripción de regla.")
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             else:
-                add(int(get_rule.group("num")), get_rule.group("desc"))
+                add(int(get_rule.group(1)), get_rule.group(2).strip())
+
     elif trigger.group(3) == "borrar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
             bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
         else:
-            remove(int(trigger.group(4)))
+            try:
+                remove(int(trigger.group(4)))
+            except ValueError:
+                bot.say(f"Error: {trigger.group(4)} no es un número válido.")
+                bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
+
     else:
         bot.say(f"Error: comando {trigger.group(3)} desconocido.")
