@@ -269,37 +269,29 @@ def match_badword(bot, trigger):
     def handle_mute():
         if bot.channels[trigger.sender].privileges[trigger.nick] == plugin.VOICE:
             if trigger.account is None:
-                bot.say(
-                    f"{trigger.nick}, la palabra {COLOR}{RED}{word}{COLOR}{GREEN} está prohibida, te vas muteado!"
-                )
                 bot.write(("MODE", trigger.sender.lower(), "-v", trigger.nick))
                 bot.write(
-                    ("MODE", trigger.sender.lower(), "+b", f"m:{trigger.nick}!*@*")
+                    ("MODE", trigger.sender.lower(), "+b", f"m:*!*@{trigger.host}")
                 )
                 s = sched.scheduler(time.monotonic, time.sleep)
                 s.enter(
                     120.0,
                     1,
                     lambda: bot.write(
-                        ("MODE", trigger.sender.lower(), "-b", f"m:{trigger.nick}!*@*")
+                        ("MODE", trigger.sender.lower(), "-b", f"m:*!*@{trigger.host}")
                     ),
                 )
                 s.run()
             else:
-                bot.say(
-                    f"{trigger.nick}, la palabra {COLOR}{RED}{word}{COLOR}{GREEN} está prohibida, te vas muteado!"
-                )
                 bot.write(
                     ("CS", "amode", trigger.sender.lower(), "-v", trigger.account)
                 )
-                bot.write(
-                    ("MODE", trigger.sender.lower(), "+b", f"m:{trigger.nick}!*@*")
-                )
+                bot.write(("MODE", trigger.sender.lower(), "+b", f"*!*@{trigger.host}"))
                 s = sched.scheduler(time.monotonic, time.sleep)
 
                 def unmute_avoice():
                     bot.write(
-                        ("MODE", trigger.sender.lower(), "-b", f"m:{trigger.nick}")
+                        ("MODE", trigger.sender.lower(), "-b", f"*!*@{trigger.host}")
                     )
                     bot.write(
                         ("CS", "amode", trigger.sender.lower(), "+v", trigger.account)
@@ -308,16 +300,13 @@ def match_badword(bot, trigger):
                 s.enter(120.0, 1, unmute_avoice)
                 s.run()
         elif bot.channels[trigger.sender].privileges[trigger.nick] < plugin.VOICE:
-            bot.say(
-                f"{trigger.nick}, la palabra {COLOR}{RED}{word}{COLOR}{GREEN} está prohibida, te vas muteado!"
-            )
-            bot.write(("MODE", trigger.sender.lower(), "+b", f"m:{trigger.nick}!*@*"))
+            bot.write(("MODE", trigger.sender.lower(), "+b", f"*!*@{trigger.host}"))
             s = sched.scheduler(time.monotonic, time.sleep)
             s.enter(
                 120.0,
                 1,
                 lambda: bot.write(
-                    ("MODE", trigger.sender.lower(), "-b", f"m:{trigger.nick}!*@*")
+                    ("MODE", trigger.sender.lower(), "-b", f"m:*!*@{trigger.host}")
                 ),
             )
             s.run()
@@ -331,6 +320,9 @@ def match_badword(bot, trigger):
                 regex = re.compile(fr"\b({word})+\b", re.I)
                 match = re.search(regex, msg)
                 if match is not None:
+                    bot.say(
+                        f"{trigger.nick}, la palabra {COLOR}{RED}{word}{COLOR}{GREEN} está prohibida, te vas muteado!"
+                    )
                     handle_mute()
                     break
 
@@ -706,3 +698,13 @@ def rules(bot, trigger):
 
     else:
         bot.say(f"Error: comando {trigger.group(3)} desconocido.")
+
+
+@plugin.interval(10)
+def rules_reminder(bot):
+    for channel in bot.memory["channels"]:
+        if bot.memory["channels"][channel]["rules"]:
+            bot.say(
+                f"{BOLD}{COLOR}{GREEN}Escribe {COLOR}{RED}!reglas{COLOR}{GREEN} para leer las reglas 📖",
+                channel,
+            )
