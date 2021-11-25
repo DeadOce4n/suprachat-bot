@@ -700,7 +700,7 @@ def rules(bot, trigger):
         bot.say(f"Error: comando {trigger.group(3)} desconocido.")
 
 
-@plugin.interval(10)
+@plugin.interval(600)
 def rules_reminder(bot):
     for channel in bot.memory["channels"]:
         if bot.memory["channels"][channel]["rules"]:
