@@ -283,10 +283,10 @@ def match_badword(bot, trigger):
                 )
                 s.run()
             else:
+                bot.write(("CS", "amode", trigger.sender.lower(), "-v", trigger.nick))
                 bot.write(
-                    ("CS", "amode", trigger.sender.lower(), "-v", trigger.account)
+                    ("MODE", trigger.sender.lower(), "+b", f"m:*!*@{trigger.host}")
                 )
-                bot.write(("MODE", trigger.sender.lower(), "+b", f"m:*!*@{trigger.host}"))
                 s = sched.scheduler(time.monotonic, time.sleep)
 
                 def unmute_avoice():
@@ -294,7 +294,7 @@ def match_badword(bot, trigger):
                         ("MODE", trigger.sender.lower(), "-b", f"m:*!*@{trigger.host}")
                     )
                     bot.write(
-                        ("CS", "amode", trigger.sender.lower(), "+v", trigger.account)
+                        ("CS", "amode", trigger.sender.lower(), "+v", trigger.nick)
                     )
 
                 s.enter(120.0, 1, unmute_avoice)
