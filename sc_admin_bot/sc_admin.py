@@ -286,12 +286,12 @@ def match_badword(bot, trigger):
                 bot.write(
                     ("CS", "amode", trigger.sender.lower(), "-v", trigger.account)
                 )
-                bot.write(("MODE", trigger.sender.lower(), "+b", f"*!*@{trigger.host}"))
+                bot.write(("MODE", trigger.sender.lower(), "+b", f"m:*!*@{trigger.host}"))
                 s = sched.scheduler(time.monotonic, time.sleep)
 
                 def unmute_avoice():
                     bot.write(
-                        ("MODE", trigger.sender.lower(), "-b", f"*!*@{trigger.host}")
+                        ("MODE", trigger.sender.lower(), "-b", f"m:*!*@{trigger.host}")
                     )
                     bot.write(
                         ("CS", "amode", trigger.sender.lower(), "+v", trigger.account)
@@ -300,7 +300,7 @@ def match_badword(bot, trigger):
                 s.enter(120.0, 1, unmute_avoice)
                 s.run()
         elif bot.channels[trigger.sender].privileges[trigger.nick] < plugin.VOICE:
-            bot.write(("MODE", trigger.sender.lower(), "+b", f"*!*@{trigger.host}"))
+            bot.write(("MODE", trigger.sender.lower(), "+b", f"m:*!*@{trigger.host}"))
             s = sched.scheduler(time.monotonic, time.sleep)
             s.enter(
                 120.0,
