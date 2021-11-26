@@ -283,6 +283,7 @@ def match_badword(bot, trigger):
                 )
                 s.run()
             else:
+                bot.write(("MODE", trigger.sender.lower(), "-v", trigger.nick))
                 bot.write(("CS", "amode", trigger.sender.lower(), "-v", trigger.nick))
                 bot.write(
                     ("MODE", trigger.sender.lower(), "+b", f"m:*!*@{trigger.host}")
