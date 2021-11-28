@@ -2,10 +2,11 @@ import re
 import sched
 from sys import exit
 import time
+from pprint import pprint
 
 import mariadb
 from sopel import config, formatting, plugin
-from sopel.tools import SopelMemory
+from sopel.tools import SopelMemory, events
 
 settings = config.Config("/home/ivan/.sopel/default.cfg")
 NOT_ALLOWED = "No tienes permitido usar este comando."
@@ -95,6 +96,16 @@ def setup(bot):
 
 def configure(bot):
     config.define_section("ScAdmin", ScAdminSection, validate=False)
+
+
+@plugin.event(events.RPL_LUSERCLIENT)
+def join_channels(bot, trigger):
+    channels_not_joined = [
+        channel
+        for channel in bot.memory["channels"]
+        if channel not in bot.channels.keys()
+    ]
+    pprint(channels_not_joined)
 
 
 @plugin.event("JOIN")
@@ -505,7 +516,6 @@ def user_join(bot, trigger):
 
 
 @plugin.require_chanmsg
-@plugin.require_privilege(plugin.ADMIN, NOT_ALLOWED)
 @plugin.command(
     "reglas agregar", "reglas modificar", "rg agregar", "rg modificar", "reglas", "rg"
 )
@@ -637,7 +647,7 @@ def rules(bot, trigger):
         show()
 
     elif trigger.group(3) == "activar":
-        if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
+        if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.ADMIN:
             bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
         else:
             toggle()
