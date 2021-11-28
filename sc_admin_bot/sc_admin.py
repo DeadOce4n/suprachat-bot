@@ -130,8 +130,8 @@ def bot_join(bot, trigger):
 
 
 @plugin.require_chanmsg
-@plugin.require_privilege(4, NOT_ALLOWED)
-@plugin.command("badwords", "bw", "palabrotas")
+@plugin.require_privilege(plugin.ADMIN, NOT_ALLOWED)
+@plugin.command("badwords", "bw")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def badwords(bot, trigger):
     def show():
@@ -329,7 +329,7 @@ def match_badword(bot, trigger):
 
 
 @plugin.require_chanmsg
-@plugin.require_privilege(4, NOT_ALLOWED)
+@plugin.require_privilege(plugin.ADMIN, NOT_ALLOWED)
 @plugin.command("badnicks", "bn")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def badnicks(bot, trigger):
@@ -505,6 +505,7 @@ def user_join(bot, trigger):
 
 
 @plugin.require_chanmsg
+@plugin.require_privilege(plugin.ADMIN, NOT_ALLOWED)
 @plugin.command(
     "reglas agregar", "reglas modificar", "rg agregar", "rg modificar", "reglas", "rg"
 )
