@@ -665,7 +665,7 @@ def rules(bot, trigger):
             bot.say("Error: no se especificó número de regla.")
             bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
         else:
-            get_rule = re.search(r"(\b\d\b)\b(.*)\b", trigger.group(2))
+            get_rule = re.search(r"(\b\d+\b)\b(.*)\b", trigger.group(2))
             if get_rule is None:
                 bot.say("Error: no se especificó regla.")
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
