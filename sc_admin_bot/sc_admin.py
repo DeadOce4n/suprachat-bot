@@ -98,16 +98,6 @@ def configure(bot):
     config.define_section("ScAdmin", ScAdminSection, validate=False)
 
 
-@plugin.event(events.RPL_LUSERCLIENT)
-def join_channels(bot, trigger):
-    channels_not_joined = [
-        channel
-        for channel in bot.memory["channels"]
-        if channel not in bot.channels.keys()
-    ]
-    pprint(channels_not_joined)
-
-
 @plugin.event("JOIN")
 @plugin.priority("low")
 @plugin.thread(True)
@@ -710,13 +700,3 @@ def rules(bot, trigger):
 
     else:
         bot.say(f"Error: comando {trigger.group(3)} desconocido.")
-
-
-@plugin.interval(600)
-def rules_reminder(bot):
-    for channel in bot.memory["channels"]:
-        if bot.memory["channels"][channel]["rules"]:
-            bot.say(
-                f"{BOLD}{COLOR}{GREEN}Escribe {COLOR}{RED}!reglas{COLOR}{GREEN} para leer las reglas 📖",
-                channel,
-            )
