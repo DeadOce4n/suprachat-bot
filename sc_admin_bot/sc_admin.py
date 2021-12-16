@@ -98,6 +98,19 @@ def configure(bot):
     config.define_section("ScAdmin", ScAdminSection, validate=False)
 
 
+@plugin.event("INVITE")
+@plugin.priority("low")
+@plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
+def invite(bot, trigger):
+    if trigger.account:
+        bot.join(trigger.sender)
+    else:
+        bot.notice(
+            "Lo siento, solamente usuarios registrados pueden invitarme a una sala 😔",
+            trigger.nick,
+        )
+
+
 @plugin.event("JOIN")
 @plugin.priority("low")
 @plugin.thread(True)
@@ -108,8 +121,6 @@ def bot_join(bot, trigger):
         trigger.nick == bot.nick
         and trigger.sender.lower() not in bot.memory["channels"].keys()
     ):
-        print(bot.nick)
-        print(trigger.sender.lower())
         try:
             conn = get_db()
             cursor = conn.cursor(named_tuple=True)
@@ -578,7 +589,6 @@ def rules(bot, trigger):
                 bot.say("La regla se agregó correctamente a la base de datos.")
 
     def update(rule_num: int, rule_desc: str) -> None:
-        print(f"{rule_num}, {rule_desc}")
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
             bot.say("Error: las reglas no están activadas para esta sala.")
         elif rule_num not in bot.memory["rules"][trigger.sender.lower()].keys():
