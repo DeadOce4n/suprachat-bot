@@ -156,9 +156,9 @@ def badwords(bot, trigger):
                 f"Error: no hay palabras en lista negra para la sala {trigger.sender}"
             )
         else:
-            bot.say(f"Palabras en lista negra para la sala {trigger.sender}")
+            bot.say(f"Palabras en lista negra para la sala {trigger.sender}", trigger.nick)
             for word in bot.memory["badwords"][trigger.sender.lower()]:
-                bot.say(f"- {word}")
+                bot.say(f"- {word}", trigger.nick)
 
     def toggle(activate=True):
         if (
@@ -353,9 +353,9 @@ def badnicks(bot, trigger):
                 f"Error: no hay nicks en lista negra para la sala {trigger.sender}."
             )
         else:
-            bot.say(f"Nicks en lista negra para la sala {trigger.sender}:")
+            bot.say(f"Nicks en lista negra para la sala {trigger.sender}:", trigger.nick)
             for nick in bot.memory["badnicks"][trigger.sender.lower()]:
-                bot.say(nick)
+                bot.say(nick, trigger.nick)
 
     def toggle(activate=True):
         if (
