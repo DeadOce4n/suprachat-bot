@@ -156,7 +156,9 @@ def badwords(bot, trigger):
                 f"Error: no hay palabras en lista negra para la sala {trigger.sender}"
             )
         else:
-            bot.say(f"Palabras en lista negra para la sala {trigger.sender}", trigger.nick)
+            bot.say(
+                f"Palabras en lista negra para la sala {trigger.sender}", trigger.nick
+            )
             for word in bot.memory["badwords"][trigger.sender.lower()]:
                 bot.say(f"- {word}", trigger.nick)
 
@@ -181,8 +183,7 @@ def badwords(bot, trigger):
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     "UPDATE channel SET channel.badwords_enabled = ? WHERE"
-                    " channel.channel_id = (SELECT channel_id FROM channel"
-                    " WHERE channel_name = ?)",
+                    " channel.channel_name = ?;",
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
@@ -236,9 +237,9 @@ def badwords(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "DELETE FROM badword WHERE(badword.badword = ? AND badword"
-                    ".channel_id = (SELECT channel_id FROM channel WHERE"
-                    " channel_name = ?))",
+                    "DELETE badword FROM badword JOIN channel ON badword.channel_id"
+                    " = channel.channel_id WHERE badword.badword = ? AND channel."
+                    "channel_name = ?;",
                     (badword, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
@@ -330,7 +331,7 @@ def match_badword(bot, trigger):
             pass
         elif trigger.sender.lower() in bot.memory["badwords"].keys():
             for word in bot.memory["badwords"][trigger.sender.lower()]:
-                regex = re.compile(fr"\b({word})+\b", re.I)
+                regex = re.compile(rf"\b({word})+\b", re.I)
                 match = re.search(regex, msg)
                 if match is not None:
                     bot.say(
@@ -353,7 +354,9 @@ def badnicks(bot, trigger):
                 f"Error: no hay nicks en lista negra para la sala {trigger.sender}."
             )
         else:
-            bot.say(f"Nicks en lista negra para la sala {trigger.sender}:", trigger.nick)
+            bot.say(
+                f"Nicks en lista negra para la sala {trigger.sender}:", trigger.nick
+            )
             for nick in bot.memory["badnicks"][trigger.sender.lower()]:
                 bot.say(nick, trigger.nick)
 
@@ -376,8 +379,7 @@ def badnicks(bot, trigger):
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     "UPDATE channel SET channel.badnicks_enabled = ? WHERE"
-                    " channel.channel_id = (SELECT channel_id FROM channel"
-                    " WHERE channel_name = ?)",
+                    " channel.name = ?;",
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
@@ -446,9 +448,9 @@ def badnicks(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "DELETE FROM badnick WHERE(badnick.badnick = ? AND badnick"
-                    ".channel_id = (SELECT channel_id FROM channel WHERE"
-                    " channel_name = ?));",
+                    "DELETE badnick FROM badnick JOIN channel ON badnick.channel_id"
+                    " = channel.channel_id WHERE badnick.badnick = ? AND channel."
+                    "channel_name = ?;",
                     (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.Error as err:
@@ -550,8 +552,7 @@ def rules(bot, trigger):
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     "UPDATE channel SET channel.rules_enabled = ? WHERE"
-                    " channel.channel_id = (SELECT channel_id FROM channel"
-                    " WHERE channel_name = ?)",
+                    " channel.channel_name = ?;",
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.Error as err:
@@ -600,9 +601,9 @@ def rules(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "UPDATE rule SET rule_desc = ? WHERE (rule.channel_id = (SELECT"
-                    " channel_id FROM channel WHERE channel_name = ?) AND rule_number"
-                    " = ?);",
+                    "UPDATE rule JOIN channel ON rule.channel_id = channel.channel_id"
+                    " SET rule.rule_desc = ? WHERE channel.channel_name = ? AND rule."
+                    "rule_number = ?;",
                     (rule_desc, trigger.sender.lower(), rule_num),
                 )
             except mariadb.Error as err:
@@ -627,9 +628,9 @@ def rules(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "DELETE FROM rule WHERE(rule_number = ? AND channel_id ="
-                    " (SELECT channel_id FROM channel WHERE"
-                    " channel_name = ?));",
+                    "DELETE rule FROM rule JOIN channel ON rule.channel_id ="
+                    " channel.channel_id WHERE rule.rule_number = ? AND channel."
+                    "channel_name = ?;",
                     (rule_num, trigger.sender.lower()),
                 )
             except mariadb.Error as err:
