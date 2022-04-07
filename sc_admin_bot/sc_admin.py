@@ -2,11 +2,10 @@ import re
 import sched
 from sys import exit
 import time
-from pprint import pprint
 
 import mariadb
 from sopel import config, formatting, plugin
-from sopel.tools import SopelMemory, events
+from sopel.tools import SopelMemory
 
 settings = config.Config("/home/ivan/.sopel/default.cfg")
 NOT_ALLOWED = "No tienes permitido usar este comando."
