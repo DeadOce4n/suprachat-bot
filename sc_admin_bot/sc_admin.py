@@ -6,9 +6,9 @@ import time
 import mariadb
 from sopel import config, formatting, plugin
 from sopel.tools import SopelMemory
+from .strings import errors
 
 settings = config.Config("/home/ivan/.sopel/default.cfg")
-NOT_ALLOWED = "No tienes permitido usar este comando."
 COLOR = formatting.CONTROL_COLOR
 GREEN = formatting.colors.GREEN
 RED = formatting.colors.RED
@@ -25,7 +25,7 @@ def get_db():
     try:
         conn = mariadb.connect(**conn_params)
     except mariadb.Error as err:
-        print(f"Error connecting to MariaDB engine: {err}")
+        print(errors["DB_CONNECTION_ERROR"].format(err))
         exit(1)
     else:
         return conn
@@ -127,7 +127,7 @@ def bot_join(bot, trigger):
                 "INSERT INTO channel(channel_name) VALUE(?);", (trigger.sender.lower(),)
             )
         except mariadb.Error as err:
-            bot.say(f"Error: {err}", bot.owner)
+            bot.say(errors["DB_ERROR"].format(err))
         else:
             conn.commit()
             conn.close()
@@ -141,19 +141,15 @@ def bot_join(bot, trigger):
 
 
 @plugin.require_chanmsg
-@plugin.require_privilege(plugin.ADMIN, NOT_ALLOWED)
+@plugin.require_privilege(plugin.ADMIN, errors["COMMAND_NOT_ALLOWED"])
 @plugin.command("badwords", "bw")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def badwords(bot, trigger):
     def show():
         if not bot.memory["channels"][trigger.sender.lower()]["badwords"]:
-            bot.say(
-                f"Error: la moderación de palabras no está activada para esta sala."
-            )
+            bot.say(errors["BADWORDS_NOT_ENABLED"].format(trigger.sender))
         elif len(bot.memory["badwords"][trigger.sender.lower()]) == 0:
-            bot.say(
-                f"Error: no hay palabras en lista negra para la sala {trigger.sender}"
-            )
+            bot.say(errors["NO_BADWORDS"].format(trigger.sender))
         else:
             bot.say(
                 f"Palabras en lista negra para la sala {trigger.sender}", trigger.nick
@@ -166,16 +162,12 @@ def badwords(bot, trigger):
             activate == True
             and bot.memory["channels"][trigger.sender.lower()]["badwords"]
         ):
-            bot.say(
-                f"Error: la moderación de palabras ya está activada para la sala {trigger.sender}."
-            )
+            bot.say(errors["BADWORDS_ENABLED"].format(trigger.sender))
         elif (
             activate == False
             and not bot.memory["channels"][trigger.sender.lower()]["badwords"]
         ):
-            bot.say(
-                f"Error: la moderación de palabras ya está desactivada para la sala {trigger.sender}."
-            )
+            bot.say(errors["BADWORDS_DISABLED"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -186,7 +178,7 @@ def badwords(bot, trigger):
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
-                print(f"Error: {err}")
+                print(errors["DB_ERROR"].format(err))
             else:
                 conn.commit()
                 conn.close()
@@ -197,11 +189,9 @@ def badwords(bot, trigger):
 
     def add(badword):
         if not bot.memory["channels"][trigger.sender.lower()]["badwords"]:
-            bot.say(
-                f"Error: la moderación de palabras no está activada para esta sala."
-            )
+            bot.say(errors["BADWORDS_NOT_ENABLED"].format(trigger.sender))
         elif badword in bot.memory["badwords"][trigger.sender.lower()]:
-            bot.say(f"Error: esa palabra ya está en la lista de {trigger.sender}")
+            bot.say(errors["BADWORD_EXISTS"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -212,9 +202,7 @@ def badwords(bot, trigger):
                     (badword, trigger.sender.lower()),
                 )
             except mariadb.IntegrityError as err:
-                bot.say(
-                    f"Error: la palabra {badword} ya está en la lista de {trigger.sender}"
-                )
+                bot.say(errors["BADWORD_EXISTS"].format(trigger.sender))
                 bot.say(err)
             else:
                 conn.commit()
@@ -224,13 +212,9 @@ def badwords(bot, trigger):
 
     def delete(badword):
         if not bot.memory["channels"][trigger.sender.lower()]["badwords"]:
-            bot.say(
-                f"Error: la moderación de palabras no está activada para esta sala."
-            )
+            bot.say(errors["BADWORDS_NOT_ENABLED"].format(trigger.sender))
         elif badword not in bot.memory["badwords"][trigger.sender.lower()]:
-            bot.say(
-                f"Error: la palabra {badword} no se encuentra en la lista de {trigger.sender}"
-            )
+            bot.say(errors["BADWORD_NOT_EXISTS"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -242,9 +226,7 @@ def badwords(bot, trigger):
                     (badword, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
-                bot.say(
-                    f"Error: la palabra {badword} ya está en la lista de {trigger.sender}"
-                )
+                bot.say(errors["BADWORD_NOT_EXISTS"])
                 bot.say(err)
             else:
                 conn.commit()
@@ -260,18 +242,18 @@ def badwords(bot, trigger):
         toggle(activate=False)
     elif trigger.group(3) == "agregar":
         if trigger.group(4) is None:
-            bot.say("Error: no se especificó palabra.")
+            bot.say(errors["WORD_NOT_SPECIFIED"])
             bot.say(f"Ejemplo: {trigger.group(1)} agregar bobo")
         else:
             add(trigger.group(4))
     elif trigger.group(3) == "borrar":
         if trigger.group(4) is None:
-            bot.say("Error: no se especificó palabra.")
+            bot.say(errors["WORD_NOT_SPECIFIED"])
             bot.say(f"Ejemplo: {trigger.group(1)} borrar menso")
         else:
             delete(trigger.group(4))
     else:
-        bot.say(f"Error: comando {trigger.group(3)} desconocido.")
+        bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
 
 
 @plugin.rule("(.*)")
@@ -341,17 +323,15 @@ def match_badword(bot, trigger):
 
 
 @plugin.require_chanmsg
-@plugin.require_privilege(plugin.ADMIN, NOT_ALLOWED)
+@plugin.require_privilege(plugin.ADMIN, errors["COMMAND_NOT_ALLOWED"])
 @plugin.command("badnicks", "bn")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def badnicks(bot, trigger):
     def show():
         if not bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
-            bot.say(f"Error: la moderación de nicks no está activada para esta sala.")
+            bot.say(errors["BADNICKS_NOT_ENABLED"].format(trigger.sender))
         elif len(bot.memory["badnicks"][trigger.sender.lower()]) == 0:
-            bot.say(
-                f"Error: no hay nicks en lista negra para la sala {trigger.sender}."
-            )
+            bot.say(errors["NO_BADNICKS"].format(trigger.sender))
         else:
             bot.say(
                 f"Nicks en lista negra para la sala {trigger.sender}:", trigger.nick
@@ -364,14 +344,12 @@ def badnicks(bot, trigger):
             activate == True
             and bot.memory["channels"][trigger.sender.lower()]["badnicks"]
         ):
-            bot.say(
-                f"Error: la moderación de nicks ya está activada para la sala {trigger.sender}."
-            )
+            bot.say(errors["BADNICKS_ENABLED"].format(trigger.sender))
         elif (
             activate == False
             and not bot.memory["channels"][trigger.sender.lower()]["badnicks"]
         ):
-            bot.say("Error: la moderación de nicks ya está desactivada para esta sala.")
+            bot.say(errors["BADNICKS_DISABLED"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -382,7 +360,7 @@ def badnicks(bot, trigger):
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
-                print(f"Error: {err}")
+                print(errors["DB_ERROR"].format(err))
             else:
                 conn.commit()
                 conn.close()
@@ -403,11 +381,9 @@ def badnicks(bot, trigger):
 
     def add(badnick):
         if not bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
-            bot.say(f"Error: la moderación de nicks no está activada para esta sala.")
+            bot.say(errors["BADNICKS_NOT_ENABLED"].format(trigger.sender))
         elif badnick.lower() in bot.memory["badnicks"][trigger.sender.lower()]:
-            bot.say(
-                f"Error: el nick {badnick} ya está en la lista de {trigger.sender}."
-            )
+            bot.say(errors["BADNICK_EXISTS"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -418,9 +394,7 @@ def badnicks(bot, trigger):
                     (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.IntegrityError as err:
-                bot.say(
-                    f"Error: el nick {badnick} ya está en la lista de {trigger.sender}."
-                )
+                bot.say(errors["BADNICK_EXISTS"].format(trigger.sender))
                 bot.say(err)
             else:
                 conn.commit()
@@ -437,11 +411,9 @@ def badnicks(bot, trigger):
 
     def delete(badnick):
         if not bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
-            bot.say(f"Error: la moderación de nicks no está activada para esta sala.")
+            bot.say(errors["BADNICKS_NOT_ENABLED"].format(trigger.sender))
         if badnick.lower() not in bot.memory["badnicks"][trigger.sender.lower()]:
-            bot.say(
-                f"Error: el nick {badnick} no se encuentra en la lista de {trigger.sender}."
-            )
+            bot.say(errors["BADNICK_NOT_EXISTS"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -453,9 +425,7 @@ def badnicks(bot, trigger):
                     (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.Error as err:
-                bot.say(
-                    f"Error: el nick {badnick} ya está en la lista de {trigger.sender}."
-                )
+                bot.say(errors["BADNICK_NOT_EXISTS"].format(trigger.sender))
                 bot.say(err)
             else:
                 conn.commit()
@@ -471,18 +441,18 @@ def badnicks(bot, trigger):
         toggle(activate=False)
     elif trigger.group(3) == "agregar":
         if trigger.group(4) is None:
-            bot.say("Error: no se especificó palabra.")
+            bot.say(errors["NICK_NOT_SPECIFIED"])
             bot.say(f"Ejemplo: {trigger.group(1)} agregar {bot.nick}")
         else:
             add(trigger.group(4))
     elif trigger.group(3) == "borrar":
         if trigger.group(4) is None:
-            bot.say("Error: no se especificó nick.")
+            bot.say(errors["NICK_NOT_SPECIFIED"])
             bot.say(f"Ejemplo: {trigger.group(1)} borrar {bot.nick}")
         else:
             delete(trigger.group(4))
     else:
-        bot.say(f"Error: comando {trigger.group(3)} desconocido.")
+        bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
 
 
 @plugin.event("NICK")
@@ -525,9 +495,9 @@ def user_join(bot, trigger):
 def rules(bot, trigger):
     def show():
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
-            bot.say("Error: las reglas no están activadas para esta sala.")
+            bot.say(errors["RULES_NOT_ENABLED"].format(trigger.sender))
         elif len(bot.memory["rules"][trigger.sender.lower()].items()) == 0:
-            bot.say(f"No hay ninguna regla registrada para la sala {trigger.sender}")
+            bot.say(errors["NO_RULES"].format(trigger.sender))
         else:
             bot.say(f"Reglas de {trigger.sender}:", trigger.nick)
             for num, desc in bot.memory["rules"][trigger.sender.lower()].items():
@@ -535,16 +505,12 @@ def rules(bot, trigger):
 
     def toggle(activate=True):
         if activate == True and bot.memory["channels"][trigger.sender.lower()]["rules"]:
-            bot.say(
-                f"Error: las reglas ya están activadas para la sala {trigger.sender}."
-            )
+            bot.say(errors["RULES_ENABLED"].format(trigger.sender))
         elif (
             activate == False
             and not bot.memory["channels"][trigger.sender.lower()]["rules"]
         ):
-            bot.say(
-                f"Error: las reglas ya están desactivadas para la sala {trigger.sender}."
-            )
+            bot.say(errors["RULES_DISABLED"].format(trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -555,7 +521,7 @@ def rules(bot, trigger):
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.Error as err:
-                print(f"Error: {err}")
+                print(errors["DB_ERROR"].format(err))
             else:
                 conn.commit()
                 conn.close()
@@ -566,11 +532,9 @@ def rules(bot, trigger):
 
     def add(rule_num: int, rule_desc: str) -> None:
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
-            bot.say(
-                f"Error: las reglas no están activadas para la sala {trigger.sender}"
-            )
+            bot.say(errors["RULES_NOT_ENABLED"].format(trigger.sender))
         elif rule_num in bot.memory["rules"][trigger.sender.lower()].keys():
-            bot.say(f"Ya existe la regla {rule_num} para la sala {trigger.sender}")
+            bot.say(errors["RULE_EXISTS"].format(rule_num, trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -581,7 +545,7 @@ def rules(bot, trigger):
                     (rule_num, trigger.sender.lower(), rule_desc),
                 )
             except mariadb.Error as err:
-                bot.say(f"Error: {err}")
+                bot.say(errors["DB_ERROR"].format(err))
             else:
                 conn.commit()
                 conn.close()
@@ -590,11 +554,9 @@ def rules(bot, trigger):
 
     def update(rule_num: int, rule_desc: str) -> None:
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
-            bot.say("Error: las reglas no están activadas para esta sala.")
+            bot.say(errors["RULES_NOT_ENABLED"].format(trigger.sender))
         elif rule_num not in bot.memory["rules"][trigger.sender.lower()].keys():
-            bot.say(
-                f"Error: no existe la regla {rule_num} para la sala {trigger.sender}"
-            )
+            bot.say(errors["RULE_NOT_EXISTS"].format(rule_num, trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -606,7 +568,7 @@ def rules(bot, trigger):
                     (rule_desc, trigger.sender.lower(), rule_num),
                 )
             except mariadb.Error as err:
-                bot.say(f"Error: {err}")
+                bot.say(errors["DB_ERROR"].format(err))
             else:
                 conn.commit()
                 conn.close()
@@ -615,13 +577,9 @@ def rules(bot, trigger):
 
     def remove(rule_num: int) -> None:
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
-            bot.say(
-                f"Error: las reglas no están activadas para la sala {trigger.sender}."
-            )
+            bot.say(errors["RULES_NOT_ENABLED"].format(trigger.sender))
         elif rule_num not in bot.memory["rules"][trigger.sender.lower()].keys():
-            bot.say(
-                f"Error: no existe la regla {rule_num} para la sala {trigger.sender}"
-            )
+            bot.say(errors["RULE_NOT_EXISTS"].format(rule_num, trigger.sender))
         else:
             try:
                 conn = get_db()
@@ -633,7 +591,7 @@ def rules(bot, trigger):
                     (rule_num, trigger.sender.lower()),
                 )
             except mariadb.Error as err:
-                bot.say(f"Error: {err}")
+                bot.say(errors["DB_ERROR"].format(err))
             else:
                 conn.commit()
                 conn.close()
@@ -648,65 +606,65 @@ def rules(bot, trigger):
 
     elif trigger.group(3) == "activar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.ADMIN:
-            bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+            bot.say(errors["COMMAND_NOT_ALLOWED"])
         else:
             toggle()
 
     elif trigger.group(3) == "desactivar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
-            bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+            bot.say(errors["COMMAND_NOT_ALLOWED"])
         else:
             toggle(activate=False)
 
     elif trigger.group(1) == "reglas modificar" or trigger.group(1) == "rg modificar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
-            bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+            bot.say(errors["COMMAND_NOT_ALLOWED"])
         elif trigger.group(2) is None:
-            bot.say("Error: no se especificó número de regla.")
+            bot.say(errors["RULE_NUM_NOT_SPECIFIED"])
             bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
         else:
             get_rule = re.search(r"(\b\d+\b)\b(.*)\b", trigger.group(2))
             if get_rule is None:
-                bot.say("Error: no se especificó regla.")
+                bot.say(errors["RULE_NOT_SPECIFIED"])
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             elif get_rule.group(1) is None:
-                bot.say("Error: no se especificó número de regla.")
+                bot.say(errors["RULE_NUM_NOT_SPECIFIED"])
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             elif not get_rule.group(2):
-                bot.say("Error: no se especificó descripción de regla.")
+                bot.say(errors["RULE_DESC_NOT_SPECIFIED"])
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             else:
                 update(int(get_rule.group(1)), get_rule.group(2).strip())
 
     elif trigger.group(1) == "reglas agregar" or trigger.group(1) == "rg agregar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
-            bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+            bot.say(errors["COMMAND_NOT_ALLOWED"])
         elif trigger.group(2) is None:
-            bot.say("Error: no se especificó número de regla.")
+            bot.say(errors["RULE_NUM_NOT_SPECIFIED"])
             bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
         else:
             get_rule = re.search(r"(\b\d+\b)\b(.*)\b", trigger.group(2))
             if get_rule is None:
-                bot.say("Error: no se especificó regla.")
+                bot.say(errors["RULE_NOT_SPECIFIED"])
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             elif get_rule.group(1) is None:
-                bot.say("Error: no se especificó número de regla.")
+                bot.say(errors["RULE_NUM_NOT_SPECIFIED"])
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             elif not get_rule.group(2):
-                bot.say("Error: no se especificó descripción de regla.")
+                bot.say(errors["RULE_DESC_NOT_SPECIFIED"])
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
             else:
                 add(int(get_rule.group(1)), get_rule.group(2).strip())
 
     elif trigger.group(3) == "borrar":
         if bot.channels[trigger.sender].privileges[trigger.nick] < plugin.OP:
-            bot.say(f"{trigger.nick}, no tienes permiso de ejecutar este comando.")
+            bot.say(errors["COMMAND_NOT_ALLOWED"])
         else:
             try:
                 remove(int(trigger.group(4)))
             except ValueError:
-                bot.say(f"Error: {trigger.group(4)} no es un número válido.")
+                bot.say(errors["INVALID_NUM"].format(trigger.group(4)))
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
 
     else:
-        bot.say(f"Error: comando {trigger.group(3)} desconocido.")
+        bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
