@@ -6,7 +6,7 @@ import time
 import mariadb
 from sopel import config, formatting, plugin
 from sopel.tools import SopelMemory
-from .strings import errors
+from .strings import errors, queries
 
 settings = config.Config("/home/ivan/.sopel/default.cfg")
 COLOR = formatting.CONTROL_COLOR
@@ -47,7 +47,7 @@ def setup(bot):
 
     conn = get_db()
     cursor = conn.cursor(named_tuple=True)
-    cursor.execute("SELECT * FROM channel;")
+    cursor.execute(queries["GET_ALL_CHANNELS"])
 
     for row in cursor:
         if row.channel_name not in bot.memory["channels"]:
@@ -59,31 +59,21 @@ def setup(bot):
         bot.memory["channels"][row.channel_name]["badnicks"] = row.badnicks_enabled
         bot.memory["channels"][row.channel_name]["rules"] = row.rules_enabled
 
-    cursor.execute(
-        "SELECT badword.badword, channel.channel_name FROM badword JOIN"
-        " channel ON badword.channel_id = channel.channel_id;"
-    )
+    cursor.execute(queries["GET_BADWORDS"])
 
     for row in cursor:
         if row.channel_name not in bot.memory["badwords"].keys():
             bot.memory["badwords"][row.channel_name] = []
         bot.memory["badwords"][row.channel_name].append(row.badword)
 
-    cursor.execute(
-        "SELECT badnick.badnick, channel.channel_name FROM badnick JOIN"
-        " channel ON badnick.channel_id = channel.channel_id;"
-    )
+    cursor.execute(queries["GET_BADNICKS"])
 
     for row in cursor:
         if row.channel_name not in bot.memory["badnicks"].keys():
             bot.memory["badnicks"][row.channel_name] = []
         bot.memory["badnicks"][row.channel_name].append(row.badnick.lower())
 
-    cursor.execute(
-        "SELECT rule.rule_number, rule.rule_desc, channel.channel_name FROM"
-        " rule JOIN channel ON rule.channel_id = channel.channel_id ORDER BY"
-        " rule.rule_number ASC;"
-    )
+    cursor.execute(queries["GET_RULES"])
 
     for row in cursor:
         if row.channel_name not in bot.memory["rules"].keys():
@@ -123,9 +113,7 @@ def bot_join(bot, trigger):
         try:
             conn = get_db()
             cursor = conn.cursor(named_tuple=True)
-            cursor.execute(
-                "INSERT INTO channel(channel_name) VALUE(?);", (trigger.sender.lower(),)
-            )
+            cursor.execute(queries["JOIN_CHANNEL"], (trigger.sender.lower(),))
         except mariadb.Error as err:
             bot.say(errors["DB_ERROR"].format(err))
         else:
@@ -173,8 +161,7 @@ def badwords(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "UPDATE channel SET channel.badwords_enabled = ? WHERE"
-                    " channel.channel_name = ?;",
+                    queries["TOGGLE_BADWORDS"],
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
@@ -197,8 +184,7 @@ def badwords(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "INSERT INTO badword VALUES(?, (SELECT channel_id FROM"
-                    " channel WHERE channel_name = ?))",
+                    queries["ADD_BADWORD"],
                     (badword, trigger.sender.lower()),
                 )
             except mariadb.IntegrityError as err:
@@ -220,9 +206,7 @@ def badwords(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "DELETE badword FROM badword JOIN channel ON badword.channel_id"
-                    " = channel.channel_id WHERE badword.badword = ? AND channel."
-                    "channel_name = ?;",
+                    queries["DELETE_BADWORD"],
                     (badword, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
@@ -355,8 +339,7 @@ def badnicks(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "UPDATE channel SET channel.badnicks_enabled = ? WHERE"
-                    " channel.name = ?;",
+                    queries["TOGGLE_BADNICKS"],
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.ProgrammingError as err:
@@ -389,8 +372,7 @@ def badnicks(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "INSERT INTO badnick VALUES(?, (SELECT channel_id FROM"
-                    " channel WHERE (LOWER(channel_name) = ?)))",
+                    queries["ADD_BADNICK"],
                     (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.IntegrityError as err:
@@ -419,9 +401,7 @@ def badnicks(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "DELETE badnick FROM badnick JOIN channel ON badnick.channel_id"
-                    " = channel.channel_id WHERE badnick.badnick = ? AND channel."
-                    "channel_name = ?;",
+                    queries["DELETE_BADNICK"],
                     (badnick.lower(), trigger.sender.lower()),
                 )
             except mariadb.Error as err:
@@ -516,8 +496,7 @@ def rules(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
-                    "UPDATE channel SET channel.rules_enabled = ? WHERE"
-                    " channel.channel_name = ?;",
+                    queries["TOGGLE_RULES"],
                     (activate, trigger.sender.lower()),
                 )
             except mariadb.Error as err:
@@ -540,8 +519,7 @@ def rules(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "INSERT INTO rule VALUES(?, (SELECT channel.channel_id"
-                    " FROM channel WHERE channel.channel_name = ?), ?);",
+                    queries["ADD_RULE"],
                     (rule_num, trigger.sender.lower(), rule_desc),
                 )
             except mariadb.Error as err:
@@ -562,9 +540,7 @@ def rules(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "UPDATE rule JOIN channel ON rule.channel_id = channel.channel_id"
-                    " SET rule.rule_desc = ? WHERE channel.channel_name = ? AND rule."
-                    "rule_number = ?;",
+                    queries["UPDATE_RULE"],
                     (rule_desc, trigger.sender.lower(), rule_num),
                 )
             except mariadb.Error as err:
@@ -585,9 +561,7 @@ def rules(bot, trigger):
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "DELETE rule FROM rule JOIN channel ON rule.channel_id ="
-                    " channel.channel_id WHERE rule.rule_number = ? AND channel."
-                    "channel_name = ?;",
+                    queries["DELETE_RULE"],
                     (rule_num, trigger.sender.lower()),
                 )
             except mariadb.Error as err:

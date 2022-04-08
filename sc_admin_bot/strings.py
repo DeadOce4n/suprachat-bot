@@ -28,3 +28,21 @@ errors = {
     "DB_ERROR": "Database error: {}.",
     "DB_CONNECTION_ERROR": "Error connecting to MariaDB engine: {}.",
 }
+
+queries = {
+    "GET_ALL_CHANNELS": "SELECT * FROM channel;",
+    "GET_BADWORDS": "SELECT badword.badword, channel.channel_name FROM badword JOIN channel ON badword.channel_id = channel.channel_id;",
+    "GET_BADNICKS": "SELECT badnick.badnick, channel.channel_name FROM badnick JOIN channel ON badnick.channel_id = channel.channel_id;",
+    "GET_RULES": "SELECT rule.rule_number, rule.rule_desc, channel.channel_name FROM rule JOIN channel ON rule.channel_id = channel.channel_id ORDER BY rule.rule_number ASC;",
+    "JOIN_CHANNEL": "INSERT INTO channel(channel_name) VALUE(?);",
+    "TOGGLE_BADWORDS": "UPDATE channel SET channel.badwords_enabled = ? WHERE channel.channel_name = ?;",
+    "ADD_BADWORD": "INSERT INTO badword VALUES(?, (SELECT channel_id FROM channel WHERE channel_name = ?));",
+    "DELETE_BADWORD": "DELETE badword FROM badword JOIN channel ON badword.channel_id = channel.channel_id WHERE badword.badword = ? AND channel.channel_name = ?;",
+    "TOGGLE_BADNICKS": "UPDATE channel SET channel.badnicks_enabled = ? WHERE channel.channel_name = ?;",
+    "ADD_BADNICK": "INSERT INTO badnick VALUES(?, (SELECT channel_id FROM channel WHERE (LOWER(channel.channel_name) = ?)));",
+    "DELETE_BADNICK": "DELETE badnick FROM badnick JOIN channel ON badnick.channel_id = channel.channel_id WHERE badnick.badnickk = ? AND channel.channel_name = ?;",
+    "TOGGLE_RULES": "UPDATE channel SET channel.rules_enabled = ? WHERE channel.channel_name = ?;",
+    "ADD_RULE": "INSERT INTO rule VALUES(?, (SELECT channel.channel_id FROM channel WHERE channel.channel_name = ?), ?);",
+    "UPDATE_RULE": "UPDATE rule JOIN channel ON rule.channel_id = channel.channel_id SET rule.rule_desc = ? WHERE channel.channel_name = ? AND rule.rule_number = ?;",
+    "DELETE_RULE": "DELETE rule FROM rule JOIN channel ON rule.channel_id = channel.channel_id WHERE rule.rule_number = ? AND channel.channel_name = ?;",
+}
