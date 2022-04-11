@@ -6,7 +6,7 @@ import time
 import mariadb
 from sopel import config, formatting, plugin
 from sopel.tools import SopelMemory
-from .strings import errors, queries
+from .strings import errors, queries, general
 
 settings = config.Config("/home/ivan/.sopel/default.cfg")
 COLOR = formatting.CONTROL_COLOR
@@ -139,9 +139,7 @@ def badwords(bot, trigger):
         elif len(bot.memory["badwords"][trigger.sender.lower()]) == 0:
             bot.say(errors["NO_BADWORDS"].format(trigger.sender))
         else:
-            bot.say(
-                f"Palabras en lista negra para la sala {trigger.sender}", trigger.nick
-            )
+            bot.say(general["BADWORDS_IN_LIST"].format(trigger.sender), trigger.nick)
             for word in bot.memory["badwords"][trigger.sender.lower()]:
                 bot.say(f"- {word}", trigger.nick)
 
@@ -172,7 +170,11 @@ def badwords(bot, trigger):
                 bot.memory["channels"][trigger.sender.lower()][
                     "badwords"
                 ] = not bot.memory["channels"][trigger.sender.lower()]["badwords"]
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(
+                    general["TOGGLED_BADWORDS"].format(
+                        "" if activate else "des", trigger.sender
+                    )
+                )
 
     def add(badword):
         if not bot.memory["channels"][trigger.sender.lower()]["badwords"]:
@@ -194,7 +196,7 @@ def badwords(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["badwords"][trigger.sender.lower()].append(badword)
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(general["BADWORD_ADDED"].format(badword, trigger.sender))
 
     def delete(badword):
         if not bot.memory["channels"][trigger.sender.lower()]["badwords"]:
@@ -216,7 +218,7 @@ def badwords(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["badwords"][trigger.sender.lower()].remove(badword)
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(general["BADWORD_DELETED"].format(badword, trigger.sender))
 
     if trigger.group(3) == "mostrar":
         show()
@@ -236,6 +238,15 @@ def badwords(bot, trigger):
             bot.say(f"Ejemplo: {trigger.group(1)} borrar menso")
         else:
             delete(trigger.group(4))
+    elif trigger.group(3) is None:
+        bot.say(
+            general["BADWORDS_COMMANDS"].format(
+                f"{bot.config.core.prefix}{trigger.group(1)}",
+                "des"
+                if bot.memory["channels"][trigger.sender.lower()]["badwords"]
+                else "",
+            )
+        )
     else:
         bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
 
@@ -317,9 +328,7 @@ def badnicks(bot, trigger):
         elif len(bot.memory["badnicks"][trigger.sender.lower()]) == 0:
             bot.say(errors["NO_BADNICKS"].format(trigger.sender))
         else:
-            bot.say(
-                f"Nicks en lista negra para la sala {trigger.sender}:", trigger.nick
-            )
+            bot.say(general["BADNICKS_IN_LIST"].format(trigger.sender), trigger.nick)
             for nick in bot.memory["badnicks"][trigger.sender.lower()]:
                 bot.say(nick, trigger.nick)
 
@@ -350,7 +359,11 @@ def badnicks(bot, trigger):
                 bot.memory["channels"][trigger.sender.lower()][
                     "badnicks"
                 ] = not bot.memory["channels"][trigger.sender.lower()]["badnicks"]
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(
+                    general["TOGGLED_BADNICKS"].format(
+                        "" if activate else "des", trigger.sender
+                    )
+                )
                 if activate:
                     users = {
                         k: v for k, v in bot.channels[trigger.sender].users.items()
@@ -382,7 +395,7 @@ def badnicks(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["badnicks"][trigger.sender.lower()].append(badnick.lower())
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(general["BADNICK_ADDED"].format(badnick, trigger.sender))
                 users = {k: v for k, v in bot.channels[trigger.sender].users.items()}
                 for nick in users.keys():
                     if nick in bot.memory["badnicks"][trigger.sender.lower()]:
@@ -411,7 +424,7 @@ def badnicks(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["badnicks"][trigger.sender.lower()].remove(badnick.lower())
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(general["BADNICK_DELETED"].format(badnick, trigger.sender))
 
     if trigger.group(3) == "mostrar":
         show()
@@ -431,6 +444,15 @@ def badnicks(bot, trigger):
             bot.say(f"Ejemplo: {trigger.group(1)} borrar {bot.nick}")
         else:
             delete(trigger.group(4))
+    elif trigger.group(3) is None:
+        bot.say(
+            general["BADNICKS_COMMANDS"].format(
+                f"{bot.config.core.prefix}{trigger.group(1)}",
+                "des"
+                if bot.memory["channels"][trigger.sender.lower()]["badnicks"]
+                else "",
+            )
+        )
     else:
         bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
 
@@ -507,7 +529,11 @@ def rules(bot, trigger):
                 bot.memory["channels"][trigger.sender.lower()][
                     "rules"
                 ] = not bot.memory["channels"][trigger.sender.lower()]["rules"]
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(
+                    general["TOGGLED_RULES"].format(
+                        "" if activate else "des", trigger.sender
+                    )
+                )
 
     def add(rule_num: int, rule_desc: str) -> None:
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
@@ -528,7 +554,7 @@ def rules(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["rules"][trigger.sender.lower()][rule_num] = rule_desc
-                bot.say("La regla se agregó correctamente a la base de datos.")
+                bot.say(general["RULE_ADDED"].format(trigger.sender))
 
     def update(rule_num: int, rule_desc: str) -> None:
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
@@ -549,7 +575,7 @@ def rules(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["rules"][trigger.sender.lower()][rule_num] = rule_desc
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(general["RULE_UPDATED"].format(rule_num, trigger.sender))
 
     def remove(rule_num: int) -> None:
         if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
@@ -570,12 +596,9 @@ def rules(bot, trigger):
                 conn.commit()
                 conn.close()
                 bot.memory["rules"][trigger.sender.lower()].pop(rule_num)
-                bot.say(f"La operación {trigger.group(3)} se realizó con éxito.")
+                bot.say(general["RULE_DELETED"].format(rule_num, trigger.sender))
 
-    if trigger.group(3) == "mostrar" or (
-        (trigger.group(1) == "rg" or trigger.group(1) == "reglas")
-        and trigger.group(3) is None
-    ):
+    if trigger.group(3) == "mostrar":
         show()
 
     elif trigger.group(3) == "activar":
@@ -640,5 +663,14 @@ def rules(bot, trigger):
                 bot.say(errors["INVALID_NUM"].format(trigger.group(4)))
                 bot.say(f"Ejemplo: {trigger.group(1)} 1 No decir cosas desagradables.")
 
+    elif trigger.group(3) is None:
+        bot.say(
+            general["RULES_COMMANDS"].format(
+                f"{bot.config.core.prefix}{trigger.group(1)}",
+                "des"
+                if bot.memory["channels"][trigger.sender.lower()]["rules"]
+                else "",
+            )
+        )
     else:
         bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
