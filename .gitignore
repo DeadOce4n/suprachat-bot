@@ -1,3 +1,5 @@
 poetry.lock
 *.bak
 dist/
+__pycache__/
+*.py[cod]
