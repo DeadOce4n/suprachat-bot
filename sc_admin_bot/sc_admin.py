@@ -8,14 +8,13 @@ from sopel import config, formatting, plugin
 from sopel.tools import SopelMemory
 from .strings import errors, queries, general
 
-settings = config.Config("/home/ivan/.sopel/default.cfg")
 COLOR = formatting.CONTROL_COLOR
 GREEN = formatting.colors.GREEN
 RED = formatting.colors.RED
 BOLD = formatting.CONTROL_BOLD
 
 
-def get_db():
+def get_db(settings):
     conn_params = {
         "user": settings.ScAdmin.db_user,
         "password": settings.ScAdmin.db_password,
@@ -45,7 +44,7 @@ def setup(bot):
     bot.memory["badnicks"] = SopelMemory()
     bot.memory["rules"] = SopelMemory()
 
-    conn = get_db()
+    conn = get_db(bot.settings)
     cursor = conn.cursor(named_tuple=True)
     cursor.execute(queries["GET_ALL_CHANNELS"])
 
@@ -111,7 +110,7 @@ def bot_join(bot, trigger):
         and trigger.sender.lower() not in bot.memory["channels"].keys()
     ):
         try:
-            conn = get_db()
+            conn = get_db(bot.settings)
             cursor = conn.cursor(named_tuple=True)
             cursor.execute(queries["JOIN_CHANNEL"], (trigger.sender.lower(),))
         except mariadb.Error as err:
@@ -156,7 +155,7 @@ def badwords(bot, trigger):
             bot.say(errors["BADWORDS_DISABLED"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["TOGGLE_BADWORDS"],
@@ -183,7 +182,7 @@ def badwords(bot, trigger):
             bot.say(errors["BADWORD_EXISTS"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["ADD_BADWORD"],
@@ -205,7 +204,7 @@ def badwords(bot, trigger):
             bot.say(errors["BADWORD_NOT_EXISTS"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["DELETE_BADWORD"],
@@ -345,7 +344,7 @@ def badnicks(bot, trigger):
             bot.say(errors["BADNICKS_DISABLED"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["TOGGLE_BADNICKS"],
@@ -382,7 +381,7 @@ def badnicks(bot, trigger):
             bot.say(errors["BADNICK_EXISTS"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["ADD_BADNICK"],
@@ -411,7 +410,7 @@ def badnicks(bot, trigger):
             bot.say(errors["BADNICK_NOT_EXISTS"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["DELETE_BADNICK"],
@@ -515,7 +514,7 @@ def rules(bot, trigger):
             bot.say(errors["RULES_DISABLED"].format(trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor(named_tuple=True)
                 cursor.execute(
                     queries["TOGGLE_RULES"],
@@ -542,7 +541,7 @@ def rules(bot, trigger):
             bot.say(errors["RULE_EXISTS"].format(rule_num, trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor()
                 cursor.execute(
                     queries["ADD_RULE"],
@@ -563,7 +562,7 @@ def rules(bot, trigger):
             bot.say(errors["RULE_NOT_EXISTS"].format(rule_num, trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor()
                 cursor.execute(
                     queries["UPDATE_RULE"],
@@ -584,7 +583,7 @@ def rules(bot, trigger):
             bot.say(errors["RULE_NOT_EXISTS"].format(rule_num, trigger.sender))
         else:
             try:
-                conn = get_db()
+                conn = get_db(bot.settings)
                 cursor = conn.cursor()
                 cursor.execute(
                     queries["DELETE_RULE"],
