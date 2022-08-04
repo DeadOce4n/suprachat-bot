@@ -1,0 +1,15 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+  - name: build
+    image: python:slim
+    commands:
+      - python3 -m venv venv
+      - source venv/bin/activate
+      - pip install --upgrade pip wheel setuptools
+      - pip install poetry
+      - poetry install
+      - poetry build
+      - pip install dist *.whl
