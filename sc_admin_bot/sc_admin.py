@@ -38,35 +38,35 @@ def setup(bot):
     cursor.execute(queries["GET_ALL_CHANNELS"])
 
     for row in cursor:
-        if row.channel_name not in bot.memory["channels"]:
-            bot.memory["channels"][row.channel_name] = {}
-            bot.memory["badwords"][row.channel_name] = []
-            bot.memory["badnicks"][row.channel_name] = []
-            bot.memory["rules"][row.channel_name] = {}
-        bot.memory["channels"][row.channel_name]["badwords"] = row.badwords_enabled
-        bot.memory["channels"][row.channel_name]["badnicks"] = row.badnicks_enabled
-        bot.memory["channels"][row.channel_name]["rules"] = row.rules_enabled
+        if row[1] not in bot.memory["channels"]:
+            bot.memory["channels"][row[1]] = {}
+            bot.memory["badwords"][row[1]] = []
+            bot.memory["badnicks"][row[1]] = []
+            bot.memory["rules"][row[1]] = {}
+        bot.memory["channels"][row[1]]["badwords"] = row[2]
+        bot.memory["channels"][row[1]]["badnicks"] = row[3]
+        bot.memory["channels"][row[1]]["rules"] = row[4]
 
     cursor.execute(queries["GET_BADWORDS"])
 
     for row in cursor:
-        if row.channel_name not in bot.memory["badwords"].keys():
-            bot.memory["badwords"][row.channel_name] = []
-        bot.memory["badwords"][row.channel_name].append(row.badword)
+        if row[1] not in bot.memory["badwords"].keys():
+            bot.memory["badwords"][row[1]] = []
+        bot.memory["badwords"][row[1]].append(row[0])
 
     cursor.execute(queries["GET_BADNICKS"])
 
     for row in cursor:
-        if row.channel_name not in bot.memory["badnicks"].keys():
-            bot.memory["badnicks"][row.channel_name] = []
-        bot.memory["badnicks"][row.channel_name].append(row.badnick.lower())
+        if row[1] not in bot.memory["badnicks"].keys():
+            bot.memory["badnicks"][row[1]] = []
+        bot.memory["badnicks"][row[1]].append(row[0].lower())
 
     cursor.execute(queries["GET_RULES"])
 
     for row in cursor:
-        if row.channel_name not in bot.memory["rules"].keys():
-            bot.memory["rules"][row.channel_name] = {}
-        bot.memory["rules"][row.channel_name][row.rule_number] = row.rule_desc
+        if row[1] not in bot.memory["rules"].keys():
+            bot.memory["rules"][row[2]] = {}
+        bot.memory["rules"][row[2]][row[0]] = row[1]
 
     conn.close()
 

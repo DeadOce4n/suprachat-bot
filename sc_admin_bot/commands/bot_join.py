@@ -10,7 +10,7 @@ def bot_join(bot, trigger):
     ):
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(queries["JOIN_CHANNEL"], (trigger.sender.lower(),))
         except MariaDBError as err:
             bot.say(errors["DB_ERROR"].format(err))

@@ -36,7 +36,7 @@ def _toggle(bot, trigger, activate=True):
     else:
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(
                 queries["TOGGLE_BADWORDS"],
                 (activate, trigger.sender.lower()),
@@ -64,7 +64,7 @@ def _add(bot, trigger, badword):
     else:
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(
                 queries["ADD_BADWORD"],
                 (badword, trigger.sender.lower()),
@@ -87,7 +87,7 @@ def _delete(bot, trigger, badword):
     else:
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(
                 queries["DELETE_BADWORD"],
                 (badword, trigger.sender.lower()),

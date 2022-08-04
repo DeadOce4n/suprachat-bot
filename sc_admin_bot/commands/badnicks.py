@@ -26,7 +26,7 @@ def _toggle(bot, trigger, activate=True):
     else:
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(
                 queries["TOGGLE_BADNICKS"],
                 (activate, trigger.sender.lower()),
@@ -62,7 +62,7 @@ def _add(bot, trigger, badnick):
     else:
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(
                 queries["ADD_BADNICK"],
                 (badnick.lower(), trigger.sender.lower()),
@@ -92,7 +92,7 @@ def _delete(bot, trigger, badnick):
     else:
         try:
             conn = get_db(bot.settings)
-            cursor = conn.cursor(named_tuple=True)
+            cursor = conn.cursor()
             cursor.execute(
                 queries["DELETE_BADNICK"],
                 (badnick.lower(), trigger.sender.lower()),
