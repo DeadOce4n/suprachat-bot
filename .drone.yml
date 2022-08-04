@@ -4,9 +4,9 @@ name: default
 
 steps:
   - name: build
-    image: archlinux:base-devel
+    image: mariadb:latest
     commands:
-      - sh -c "pacman -S python mariadb"
+      - apt update && apt install -y --no-install-recommends python3
       - python -m venv venv
       - . venv/bin/activate
       - pip install --upgrade pip wheel setuptools
