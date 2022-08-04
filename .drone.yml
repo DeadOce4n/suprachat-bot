@@ -7,7 +7,7 @@ steps:
     image: mariadb:latest
     commands:
       - apt update && apt install -y --no-install-recommends python3
-      - python -m venv venv
+      - python3 -m venv venv
       - . venv/bin/activate
       - pip install --upgrade pip wheel setuptools
       - pip install poetry
