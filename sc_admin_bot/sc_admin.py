@@ -1,17 +1,17 @@
 from sopel import config, formatting, plugin
 from sopel.tools import SopelMemory
 
-from .commands.badnicks import (
+from sc_admin_bot.commands.badnicks import (
     badnicks as _badnicks,
     match_badnick as _match_badnick,
     user_join as _user_join,
 )
-from .commands.badwords import badwords as _badwords, match_badword as _match_badword
-from .commands.bot_join import bot_join as _bot_join
-from .commands.invite import invite as _invite
-from .commands.rules import rules as _rules
-from .strings import errors, queries
-from .utils.func import get_db
+from sc_admin_bot.commands.badwords import badwords as _badwords, match_badword as _match_badword
+from sc_admin_bot.commands.bot_join import bot_join as _bot_join
+from sc_admin_bot.commands.invite import invite as _invite
+from sc_admin_bot.commands.rules import rules as _rules
+from sc_admin_bot.strings import errors, queries
+from sc_admin_bot.utils.func import get_db
 
 COLOR = formatting.CONTROL_COLOR
 GREEN = formatting.colors.GREEN
