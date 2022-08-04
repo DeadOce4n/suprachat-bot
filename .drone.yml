@@ -4,8 +4,9 @@ name: default
 
 steps:
   - name: build
-    image: python:slim
+    image: archlinux:base-devel
     commands:
+      - pacman -Syu python mariadb
       - python3 -m venv venv
       - . venv/bin/activate
       - pip install --upgrade pip wheel setuptools
