@@ -13,4 +13,3 @@ steps:
       - pip install poetry
       - poetry install
       - poetry build
-      - pip install dist/*.whl
