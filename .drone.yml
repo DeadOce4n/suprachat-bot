@@ -13,6 +13,10 @@ steps:
       - pip install poetry
       - poetry install
       - poetry build
+    when:
+      event:
+        exclude:
+          - promote
   - name: deploy
     image: appleboy/drone-ssh
     settings:
