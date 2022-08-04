@@ -6,7 +6,7 @@ steps:
   - name: build
     image: archlinux:base-devel
     commands:
-      - sh -c "pacman -Syu python mariadb"
+      - sh -c "pacman -S python mariadb"
       - python -m venv venv
       - . venv/bin/activate
       - pip install --upgrade pip wheel setuptools
