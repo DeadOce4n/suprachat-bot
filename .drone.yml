@@ -7,8 +7,10 @@ steps:
     image: ubuntu:latest
     commands:
       - apt-get update && apt-get install -y --no-install-recommends python3 python3-pip python3-venv libmariadb-dev
-      - pip3 install --upgrade pip wheel setuptools
-      - pip3 install poetry
+      - python3 venv venv
+      - . venv/bin/activate
+      - pip install --upgrade pip wheel setuptools
+      - pip install poetry
       - poetry install
       - poetry build
-      - pip3 install dist/*.whl
+      - pip install dist/*.whl
