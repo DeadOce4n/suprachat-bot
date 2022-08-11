@@ -64,7 +64,7 @@ def setup(bot):
     cursor.execute(queries["GET_RULES"])
 
     for row in cursor:
-        if row[1] not in bot.memory["rules"].keys():
+        if row[2] not in bot.memory["rules"].keys():
             bot.memory["rules"][row[2]] = {}
         bot.memory["rules"][row[2]][row[0]] = row[1]
 
