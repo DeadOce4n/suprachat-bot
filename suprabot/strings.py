@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 errors = {
     "COMMAND_NOT_ALLOWED": "No tienes permitido usar este comando.",
     "BADWORDS_NOT_ENABLED": "La moderación de palabras no está activada para la sala {}.",

@@ -3,7 +3,8 @@ from mariadb import Error as MariaDBError
 from ..strings import errors, queries
 from ..utils.func import get_db
 
-def bot_join(bot, trigger):
+
+def bot_join_handler(bot, trigger):
     if (
         trigger.nick == bot.nick
         and trigger.sender.lower() not in bot.memory["channels"].keys()

@@ -16,11 +16,10 @@ def _show(bot, trigger):
 
 
 def _toggle(bot, trigger, activate=True):
-    if activate == True and bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
+    if activate and bot.memory["channels"][trigger.sender.lower()]["badnicks"]:
         bot.say(errors["BADNICKS_ENABLED"].format(trigger.sender))
     elif (
-        activate == False
-        and not bot.memory["channels"][trigger.sender.lower()]["badnicks"]
+        not activate and not bot.memory["channels"][trigger.sender.lower()]["badnicks"]
     ):
         bot.say(errors["BADNICKS_DISABLED"].format(trigger.sender))
     else:
@@ -107,7 +106,7 @@ def _delete(bot, trigger, badnick):
             bot.say(general["BADNICK_DELETED"].format(badnick, trigger.sender))
 
 
-def badnicks(bot, trigger):
+def badnicks_handler(bot, trigger):
     if trigger.group(3) == "mostrar":
         _show(bot, trigger)
     elif trigger.group(3) == "activar":
@@ -139,7 +138,7 @@ def badnicks(bot, trigger):
         bot.say(errors["UNKNOWN_COMMAND"].format(trigger.group(3)))
 
 
-def match_badnick(bot, trigger):
+def match_badnick_handler(bot, trigger):
     def _filter_nicks(nick: str) -> bool:
         return nick.lower() == trigger.sender.lower()
 
@@ -150,7 +149,7 @@ def match_badnick(bot, trigger):
                 bot.write(("KICK", channel, badnick[0]), "tu nick es inapropiado!")
 
 
-def user_join(bot, trigger):
+def user_join_handler(bot, trigger):
     if (
         trigger.nick != bot.nick
         and bot.memory["channels"][trigger.sender.lower()]["badnicks"]

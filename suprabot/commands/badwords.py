@@ -26,11 +26,10 @@ def _show(bot, trigger):
 
 
 def _toggle(bot, trigger, activate=True):
-    if activate == True and bot.memory["channels"][trigger.sender.lower()]["badwords"]:
+    if activate and bot.memory["channels"][trigger.sender.lower()]["badwords"]:
         bot.say(errors["BADWORDS_ENABLED"].format(trigger.sender))
     elif (
-        activate == False
-        and not bot.memory["channels"][trigger.sender.lower()]["badwords"]
+        not activate and not bot.memory["channels"][trigger.sender.lower()]["badwords"]
     ):
         bot.say(errors["BADWORDS_DISABLED"].format(trigger.sender))
     else:
@@ -102,7 +101,7 @@ def _delete(bot, trigger, badword):
             bot.say(general["BADWORD_DELETED"].format(badword, trigger.sender))
 
 
-def badwords(bot, trigger):
+def badwords_handler(bot, trigger):
     if trigger.group(3) == "mostrar":
         _show(bot, trigger)
     elif trigger.group(3) == "activar":
@@ -175,7 +174,7 @@ def _handle_mute(bot, trigger):
         s.run()
 
 
-def match_badword(bot, trigger):
+def match_badword_handler(bot, trigger):
     msg = trigger.group(1)
     if not trigger.sender.is_nick():
         if not bot.memory["channels"][trigger.sender.lower()]["badwords"]:
@@ -186,7 +185,8 @@ def match_badword(bot, trigger):
                 match = re.search(regex, msg)
                 if match is not None:
                     bot.say(
-                        f"{trigger.nick}, la palabra {COLOR}{RED}{word}{COLOR}{GREEN} está prohibida, te vas muteado!"
+                        f"{trigger.nick}, la palabra {COLOR}{RED}{word}{COLOR}{GREEN}"
+                        " está prohibida, te vas muteado!"
                     )
                     _handle_mute(bot, trigger)
                     break

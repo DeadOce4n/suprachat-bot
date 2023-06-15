@@ -1,0 +1,37 @@
+.docker:
+  image: python:3.11.3-slim-bullseye
+  services:
+    - docker:${DOCKER_VERSION}-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_VERIFY: '1'
+    DOCKER_TLS_CERTDIR: '/certs'
+    DOCKER_CERT_PATH: '/certs/client'
+    DOCKER_DRIVER: overlay2
+    DOCKER_VERSION: '20.10.16'
+
+.dagger:
+  extends: [.docker]
+  before_script:
+    - apt-get -qq update -y && apt-get -qq install -y build-essential docker.io
+    - pip install --upgrade pip wheel setuptools
+    - pip install poetry==1.5.1
+    - poetry config virtualenvs.in-project true
+    - poetry install --only dev
+
+build-deploy:
+  extends: [.dagger]
+  script:
+    - poetry run python ci/main.py
+    - mkdir ~/.kube
+    - echo $KUBECONFIG > ~/.kube/config
+  cache:
+    key:
+      files:
+        - poetry.lock
+    paths:
+      - .venv
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_REF_PROTECTED == "true" && $CI_PIPELINE_SOURCE == 'push'
+    - if: $CI_PIPELINE_SOURCE == 'web'

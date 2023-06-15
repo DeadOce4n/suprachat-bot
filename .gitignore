@@ -4,3 +4,8 @@ dist/
 __pycache__/
 *.py[cod]
 .python-version
+config.cfg
+schema.sql
+.venv/
+logs/
+.pytest_cache/

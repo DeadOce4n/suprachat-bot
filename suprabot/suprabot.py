@@ -1,17 +1,20 @@
 from sopel import config, formatting, plugin
 from sopel.tools import SopelMemory
 
-from sc_admin_bot.commands.badnicks import (
-    badnicks as _badnicks,
-    match_badnick as _match_badnick,
-    user_join as _user_join,
+from suprabot.commands.badnicks import (
+    badnicks_handler,
+    match_badnick_handler,
+    user_join_handler,
 )
-from sc_admin_bot.commands.badwords import badwords as _badwords, match_badword as _match_badword
-from sc_admin_bot.commands.bot_join import bot_join as _bot_join
-from sc_admin_bot.commands.invite import invite as _invite
-from sc_admin_bot.commands.rules import rules as _rules
-from sc_admin_bot.strings import errors, queries
-from sc_admin_bot.utils.func import get_db
+from suprabot.commands.badwords import (
+    badwords_handler,
+    match_badword_handler,
+)
+from suprabot.commands.bot_join import bot_join_handler
+from suprabot.commands.invite import invite_handler
+from suprabot.commands.rules import rules_handler
+from suprabot.strings import errors, queries
+from suprabot.utils.func import get_db
 
 COLOR = formatting.CONTROL_COLOR
 GREEN = formatting.colors.GREEN
@@ -24,6 +27,7 @@ class ScAdminSection(config.types.StaticSection):
     db_user = config.types.ValidatedAttribute("db_user")
     db_name = config.types.ValidatedAttribute("db_name")
     db_password = config.types.ValidatedAttribute("db_password")
+    db_port = config.types.ValidatedAttribute("db_port")
 
 
 def setup(bot):
@@ -72,14 +76,14 @@ def setup(bot):
 
 
 def configure(bot):
-    config.define_section("ScAdmin", ScAdminSection, validate=False)
+    config.define_section("ScAdmin", ScAdminSection, validate=False) # type: ignore
 
 
 @plugin.event("INVITE")
 @plugin.priority("low")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def invite(bot, trigger):
-    return _invite(bot, trigger)
+    return invite_handler(bot, trigger)
 
 
 @plugin.event("JOIN")
@@ -88,7 +92,7 @@ def invite(bot, trigger):
 @plugin.unblockable
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def bot_join(bot, trigger):
-    return _bot_join(bot, trigger)
+    return bot_join_handler(bot, trigger)
 
 
 @plugin.require_chanmsg
@@ -96,14 +100,14 @@ def bot_join(bot, trigger):
 @plugin.command("badwords", "bw")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def badwords(bot, trigger):
-    return _badwords(bot, trigger)
+    return badwords_handler(bot, trigger)
 
 
 @plugin.rule("(.*)")
 @plugin.require_chanmsg
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def match_badword(bot, trigger):
-    return _match_badword(bot, trigger)
+    return match_badword_handler(bot, trigger)
 
 
 @plugin.require_chanmsg
@@ -111,7 +115,7 @@ def match_badword(bot, trigger):
 @plugin.command("badnicks", "bn")
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def badnicks(bot, trigger):
-    return _badnicks(bot, trigger)
+    return badnicks_handler(bot, trigger)
 
 
 @plugin.event("NICK")
@@ -120,7 +124,7 @@ def badnicks(bot, trigger):
 @plugin.unblockable
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def match_badnick(bot, trigger):
-    return _match_badnick(bot, trigger)
+    return match_badnick_handler(bot, trigger)
 
 
 @plugin.event("JOIN")
@@ -129,7 +133,7 @@ def match_badnick(bot, trigger):
 @plugin.unblockable
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def user_join(bot, trigger):
-    return _user_join(bot, trigger)
+    return user_join_handler(bot, trigger)
 
 
 @plugin.require_chanmsg
@@ -138,4 +142,4 @@ def user_join(bot, trigger):
 )
 @plugin.output_prefix(f"{BOLD}{COLOR}{GREEN}")
 def rules(bot, trigger):
-    return _rules(bot, trigger)
+    return rules_handler(bot, trigger)

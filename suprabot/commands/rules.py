@@ -19,12 +19,9 @@ def _show(bot, trigger):
 
 
 def _toggle(bot, trigger, activate=True):
-    if activate == True and bot.memory["channels"][trigger.sender.lower()]["rules"]:
+    if activate and bot.memory["channels"][trigger.sender.lower()]["rules"]:
         bot.say(errors["RULES_ENABLED"].format(trigger.sender))
-    elif (
-        activate == False
-        and not bot.memory["channels"][trigger.sender.lower()]["rules"]
-    ):
+    elif not activate and not bot.memory["channels"][trigger.sender.lower()]["rules"]:
         bot.say(errors["RULES_DISABLED"].format(trigger.sender))
     else:
         try:
@@ -39,14 +36,15 @@ def _toggle(bot, trigger, activate=True):
         else:
             conn.commit()
             conn.close()
-            bot.memory["channels"][trigger.sender.lower()][
-                "rules"
-            ] = not bot.memory["channels"][trigger.sender.lower()]["rules"]
+            bot.memory["channels"][trigger.sender.lower()]["rules"] = not bot.memory[
+                "channels"
+            ][trigger.sender.lower()]["rules"]
             bot.say(
                 general["TOGGLED_RULES"].format(
                     "" if activate else "des", trigger.sender
                 )
             )
+
 
 def _add(bot, trigger, rule_num: int, rule_desc: str) -> None:
     if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
@@ -69,6 +67,7 @@ def _add(bot, trigger, rule_num: int, rule_desc: str) -> None:
             bot.memory["rules"][trigger.sender.lower()][rule_num] = rule_desc
             bot.say(general["RULE_ADDED"].format(trigger.sender))
 
+
 def _update(bot, trigger, rule_num: int, rule_desc: str) -> None:
     if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
         bot.say(errors["RULES_NOT_ENABLED"].format(trigger.sender))
@@ -89,6 +88,7 @@ def _update(bot, trigger, rule_num: int, rule_desc: str) -> None:
             conn.close()
             bot.memory["rules"][trigger.sender.lower()][rule_num] = rule_desc
             bot.say(general["RULE_UPDATED"].format(rule_num, trigger.sender))
+
 
 def _remove(bot, trigger, rule_num: int) -> None:
     if not bot.memory["channels"][trigger.sender.lower()]["rules"]:
@@ -112,7 +112,7 @@ def _remove(bot, trigger, rule_num: int) -> None:
             bot.say(general["RULE_DELETED"].format(rule_num, trigger.sender))
 
 
-def rules(bot, trigger):
+def rules_handler(bot, trigger):
     if trigger.group(3) == "mostrar":
         _show(bot, trigger)
 

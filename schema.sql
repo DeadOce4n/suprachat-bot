@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS channel(
 	channel_name VARCHAR(64) NOT NULL,
 	badwords_enabled BOOLEAN NOT NULL DEFAULT false,
 	badnicks_enabled BOOLEAN NOT NULL DEFAULT false,
-	rules_enabled BOOLEAN NOT NULL DEFAULT false,
+	rules_enabled BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS badword(
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS badword(
 CREATE TABLE IF NOT EXISTS badnick(
 	badnick VARCHAR(32) NOT NULL,
 	channel_id INT NOT NULL,
-	PRIMARY KEY(badnick, channel_id)
+	PRIMARY KEY(badnick, channel_id),
 	FOREIGN KEY(channel_id) REFERENCES channel(channel_id) ON DELETE CASCADE
 );
 

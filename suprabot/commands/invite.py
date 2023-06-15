@@ -1,4 +1,4 @@
-def invite(bot, trigger):
+def invite_handler(bot, trigger):
     if trigger.account:
         bot.join(trigger.sender)
     else:
